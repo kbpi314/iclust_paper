@@ -1,0 +1,306 @@
+##########
+# ICLUST #
+##########
+
+# set up env
+module purge
+ml anaconda3
+source activate iclust # /sc/arion/projects/clemej05a/kevin/test-env/envs/iclust
+
+# set paths
+ICPATH=/hpc/users/buk02/Repositories/iclust
+ICPROJ=/sc/arion/projects/clemej05a/kevin/iclust
+ICPREFIX="conda activate iclust"
+
+# put this in any iclust job for the job to talk to the outside world
+module load anaconda3
+source activate tfGPU
+
+export http_proxy="http://nfs01.chimera.hpc.mssm.edu:3128/"
+export https_proxy="https://nfs01.chimera.hpc.mssm.edu:3128/"
+export ftp_proxy="http://nfs01.chimera.hpc.mssm.edu:3128/"
+export rsync_proxy="http://nfs01.chimera.hpc.mssm.edu:3128/"
+export no_proxy="localhost,127.0.0.1"
+
+###
+# Directory mapping
+###
+
+inputs/
+
+outputs/
+	jobs00							# unit test of AQ
+	jobs01 							# AQ 
+	jobs02 							# DD
+	jobs03							# WHO r~0.9 without a plot
+	jobs04							# WHO r~0.9 with all plots
+	jobs05							# airplane
+	jobs06 							# PCA testing
+	jobs07							# HDAC
+	jobs08							# Mennonites all
+	jobs09							# Mennonites 0.9 to 0.99
+	jobs10 							# baseball
+	jobs11 							# spatial
+	jobs12 							# BMI
+	jobs13 							# statin
+	jobs15 							# PLOS
+	jobs16							# nature gut
+	jobs17-22 						# df micro and L r2 
+
+	
+
+
+
+###
+# UNIT TEST in jobs00
+###
+
+# k is statistics
+# i is seed
+# j reflects sigma vector values in -sv
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" &&  export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs00 && mkdir $ICPROJ/outputs/jobs00 && for k in cc; do mkdir $ICPROJ/outputs/jobs00/aq_\${k}/; done && for i in 0; do for k in cc; do python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/anscombes.txt -o $ICPROJ/outputs/jobs00/aq_\${k}/ --labeled -l group -s \${i} -n 10 -sv 0.1 -dl aq --points --axis_off --no_fixaxis -m \$k && for j in 0.1; do mkdir $ICPROJ/outputs/jobs00/aq_\${k}/aq_\${i}_\${j}_results && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs00/aq_\${k}/aq_\${i}_\${j}/ -o $ICPROJ/outputs/jobs00/aq_\${k}/aq_\${i}_\${j}_results/ -l True -min 2 -max 20 -m \$k; done; done; done" > $ICPROJ/jobs/unit_test.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/unit_test.txt -N unit_test -o $ICPROJ/jobs/ -n 1 -w 1:00 -s True -q gpu
+
+
+###
+# AQ in jobs01
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.hpc.chimera.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs01 && mkdir $ICPROJ/outputs/jobs01 && for k in cc jb skew kurtosis rmse mine; do mkdir $ICPROJ/outputs/jobs01/aq_\${k}/; done && for i in {0..19}; do for k in cc jb skew kurtosis rmse mine; do python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/anscombes.txt -o $ICPROJ/outputs/jobs01/aq_\${k}/ --labeled -l group -s \${i} -n 10 -sv 0.1,0.25,0.5,0.75,1.0 -dl aq --points --axis_off --no_fixaxis -m \$k && for j in 0.1 0.25 0.5 0.75 1.0; do mkdir $ICPROJ/outputs/jobs01/aq_\${k}/aq_\${i}_\${j}_results && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs01/aq_\${k}/aq_\${i}_\${j}/ -o $ICPROJ/outputs/jobs01/aq_\${k}/aq_\${i}_\${j}_results/ -l True -min 2 -max 20 -m \$k; done; done; done" > $ICPROJ/jobs/AQ.txt
+
+# takes about 6h
+python $gen_lsf_fp -c $ICPROJ/jobs/AQ.txt -N AQ -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu
+
+
+
+###
+# Datasaurus Dozen in jobs02
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs02 && mkdir $ICPROJ/outputs/jobs02 && for k in cc jb skew kurtosis rmse mine; do mkdir $ICPROJ/outputs/jobs02/dd_\${k}/; done && for i in {0..19}; do for k in cc jb skew kurtosis rmse mine; do python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/DatasaurusDozen.tsv -o $ICPROJ/outputs/jobs02/dd_\${k}/ --labeled -l dataset -s \${i} -n 10 -sv 0.1,0.5,1.0,2.0,3.0 -dl dd --points --axis_off --no_fixaxis -m \$k && for j in 0.1 0.5 1.0 2.0 3.0; do mkdir $ICPROJ/outputs/jobs02/dd_\${k}/dd_\${i}_\${j}_results && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs02/dd_\${k}/dd_\${i}_\${j}/ -o $ICPROJ/outputs/jobs02/dd_\${k}/dd_\${i}_\${j}_results/ -l True -min 2 -max 20 -m \$k; done; done; done" > $ICPROJ/jobs/DD.txt
+
+# takes about 6h as well
+python $gen_lsf_fp -c $ICPROJ/jobs/DD.txt -N DD -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu
+
+
+
+
+###
+# WHO in jobs03 and 04
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs03 && mkdir $ICPROJ/outputs/jobs03 && for v in 'large_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs03/WHO_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs03/WHO_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/WHOfinal.txt -o $ICPROJ/outputs/jobs03/WHO_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.8975 -ub 0.9025 -dl WHO --axis_off --no_fixaxis -m \$m && rm $ICPROJ/outputs/jobs03/WHO_plots_\${v}_\${m}/WHO_253_31_0.902.jpg && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs03/WHO_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs03/WHO_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m -d WHO_253_31_0.902.jpg; done; done" > $ICPROJ/jobs/WHO.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/WHO.txt -N WHO -o $ICPROJ/jobs/ -n 1 -w 2:00 -s True -q gpu
+
+
+# not deleting one plot (delete two later?)
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs04 && mkdir $ICPROJ/outputs/jobs04 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs04/WHO_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs04/WHO_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/WHOfinal.txt -o $ICPROJ/outputs/jobs04/WHO_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.01 -ub 0.99 -dl WHO --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs04/WHO_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs04/WHO_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/WHO_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/WHO_all.txt -N WHO_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+# analyze with cclust and iclust
+
+
+###
+# AIRPLANE in jobs05
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs05 && mkdir $ICPROJ/outputs/jobs05 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs05/airplane_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs05/airplane_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/2008_data.txt -o $ICPROJ/outputs/jobs05/airplane_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0 -ub 1 -dl airplane --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs05/airplane_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs05/airplane_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/airplane_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/airplane_all.txt -N airplane_all -o $ICPROJ/jobs/ -n 1 -w 1:00 -s True -q gpu
+
+
+
+###
+# PCA testing in jobs06
+###
+
+# gen AQ plots 0 noise
+# gen DD plots 0 noise
+
+# manually grab some WHO and airplane plots
+
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs06 && mkdir $ICPROJ/outputs/jobs06 && for k in cc; do mkdir $ICPROJ/outputs/jobs06/pca_\${k}/; done && for i in 0; do for k in cc; do python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_all.tsv -o $ICPROJ/outputs/jobs06/pca_\${k}/ --labeled -l group -s \${i} -n 1 -sv 0.0 -dl pca --points --axis_off --no_fixaxis -m \$k && for j in 0.0; do mkdir $ICPROJ/outputs/jobs06/pca_\${k}/pca_\${i}_\${j}_results && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs06/pca_\${k}/pca_\${i}_\${j}/ -o $ICPROJ/outputs/jobs06/pca_\${k}/pca_\${i}_\${j}_results/ -l True -min 2 -max 20 -m \$k; done; done; done" > $ICPROJ/jobs/PCA.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/PCA.txt -N PCA -o $ICPROJ/jobs/ -n 1 -w 1:00 -s True -q gpu
+
+
+###
+# HDAC in jobs 07
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs07 && mkdir $ICPROJ/outputs/jobs07 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs07/HDACx100_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs07/HDACx100_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/HDACx100.tsv -o $ICPROJ/outputs/jobs07/HDACx100_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.01 -ub 0.99 -dl HDACx100 --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs07/HDACx100_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs07/HDACx100_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/HDACx100_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/HDACx100_all.txt -N HDACx100_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+###
+# Mennonites in jobs 08 and 09
+###
+
+
+/sc/arion/projects/clemej05a/kevin/cutie_exp/inputs/mennonites/df_mennonites.txt
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs08 && mkdir $ICPROJ/outputs/jobs08 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs08/mennonites_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs08/mennonites_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/mennonites.tsv -o $ICPROJ/outputs/jobs08/mennonites_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.01 -ub 0.99 -dl mennonites --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs08/mennonites_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs08/mennonites_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/mennonites_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/mennonites_all.txt -N mennonites_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs09 && mkdir $ICPROJ/outputs/jobs09 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs09/mennonites_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs09/mennonites_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/mennonites.tsv -o $ICPROJ/outputs/jobs09/mennonites_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.90 -ub 0.99 -dl mennonites --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs09/mennonites_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs09/mennonites_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/mennonites_large.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/mennonites_large.txt -N mennonites_large -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+###
+# Baseball in jobs10
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs10 && mkdir $ICPROJ/outputs/jobs10 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs10/baseball_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs10/baseball_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/Baseballfix.txt -o $ICPROJ/outputs/jobs10/baseball_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.9 -ub 0.99 -dl baseball --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs10/baseball_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs10/baseball_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/baseball_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/baseball_all.txt -N baseball_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+###
+# Spatial in jobs11
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs11 && mkdir $ICPROJ/outputs/jobs11 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs11/spatial_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs11/spatial_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_f1.txt -o $ICPROJ/outputs/jobs11/spatial_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.0001 -ub 0.99 -dl spatial --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs11/spatial_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs11/spatial_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/spatial_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/spatial_all.txt -N spatial_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+###
+# BMI in jobs12
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs12 && mkdir $ICPROJ/outputs/jobs12 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs12/bmi_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs12/bmi_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_bmi.txt -o $ICPROJ/outputs/jobs12/bmi_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.0001 -ub 0.99 -dl bmi --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs12/bmi_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs12/bmi_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/bmi_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/bmi_all.txt -N bmi_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+###
+# Statin in jobs13
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs13 && mkdir $ICPROJ/outputs/jobs13 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs13/statin_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs13/statin_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_statin.txt -o $ICPROJ/outputs/jobs13/statin_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.0001 -ub 0.99 -dl statin --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs13/statin_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs13/statin_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/statin_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/statin_all.txt -N statin_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+###
+# plos in jobs15
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs16 && mkdir $ICPROJ/outputs/jobs16 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs16/plos_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs16/plos_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_ca.tsv -o $ICPROJ/outputs/jobs16/plos_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.0001 -ub 0.99 -dl ca --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs16/plos_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs16/plos_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/plos_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/plos_all.txt -N plos_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+###
+# nature gut in jobs16
+###
+
+# still need to change df_ca, as with above in jobs15
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs16 && mkdir $ICPROJ/outputs/jobs16 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs16/natgut_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs16/natgut_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_ca.tsv -o $ICPROJ/outputs/jobs16/natgut_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.0001 -ub 0.99 -dl ca --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs16/natgut_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs16/natgut_results_\${v}_\${m}/ -l False -min 2 -max 10 -m \$m; done; done" > $ICPROJ/jobs/natgut_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/natgut_all.txt -N natgut_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+
+###
+# df_micro_10all jobs17
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs17 && mkdir $ICPROJ/outputs/jobs17 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs17/micro_10all_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs17/micro_10all_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_micro_10all.tsv -o $ICPROJ/outputs/jobs17/micro_10all_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.00000001 -ub 0.99999999 -dl micro_10all --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs17/micro_10all_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs17/micro_10all_results_\${v}_\${m}/ -l False -min 2 -max 20 -m \$m; done; done" > $ICPROJ/jobs/micro_10all_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/micro_10all_all.txt -N micro_10all_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+0.00000001
+0.99999999
+
+
+
+###
+# df_micro_10L jobs18
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs18 && mkdir $ICPROJ/outputs/jobs18 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs18/micro_10L_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs18/micro_10L_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_micro_10L.tsv -o $ICPROJ/outputs/jobs18/micro_10L_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.00000001 -ub 0.99999999 -dl micro_10L --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs18/micro_10L_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs18/micro_10L_results_\${v}_\${m}/ -l False -min 2 -max 20 -m \$m; done; done" > $ICPROJ/jobs/micro_10L_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/micro_10L_all.txt -N micro_10L_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+
+
+###
+# df_micro_100all jobs19
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs19 && mkdir $ICPROJ/outputs/jobs19 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs19/micro_100all_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs19/micro_100all_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_micro_100all.tsv -o $ICPROJ/outputs/jobs19/micro_100all_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.00000001 -ub 0.99999999 -dl micro_100all --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs19/micro_100all_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs19/micro_100all_results_\${v}_\${m}/ -l False -min 2 -max 20 -m \$m; done; done" > $ICPROJ/jobs/micro_100all_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/micro_100all_all.txt -N micro_100all_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+
+###
+# df_micro_100L jobs20
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs20 && mkdir $ICPROJ/outputs/jobs20 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs20/micro_100L_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs20/micro_100L_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_micro_100L.tsv -o $ICPROJ/outputs/jobs20/micro_100L_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.00000001 -ub 0.99999999 -dl micro_100L --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs20/micro_100L_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs20/micro_100L_results_\${v}_\${m}/ -l False -min 2 -max 20 -m \$m; done; done" > $ICPROJ/jobs/micro_100L_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/micro_100L_all.txt -N micro_100L_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+
+###
+# df_micro_100allr2 jobs21
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs21 && mkdir $ICPROJ/outputs/jobs21 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs21/micro_100allr2_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs21/micro_100allr2_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_micro_100all.tsv -o $ICPROJ/outputs/jobs21/micro_100allr2_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.2 -ub 0.99999999 -dl micro_100all --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs21/micro_100allr2_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs21/micro_100allr2_results_\${v}_\${m}/ -l False -min 2 -max 20 -m \$m; done; done" > $ICPROJ/jobs/micro_100allr2_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/micro_100allr2_all.txt -N micro_100allr2_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+
+
+###
+# df_micro_10Lr2 jobs22
+###
+
+echo "module load anaconda3 && source activate tfGPU && export http_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export https_proxy=\"https://nfs01.chimera.hpc.mssm.edu:3128/\" && export ftp_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export rsync_proxy=\"http://nfs01.chimera.hpc.mssm.edu:3128/\" && export no_proxy=\"localhost,127.0.0.1\" && rm -rf $ICPROJ/outputs/jobs21 && mkdir $ICPROJ/outputs/jobs21 && for v in 'all_corr'; do for m in cc; do mkdir $ICPROJ/outputs/jobs21/micro_10Lr2_plots_\${v}_\${m} && mkdir $ICPROJ/outputs/jobs21/micro_10Lr2_results_\${v}_\${m} && python $ICPATH/scripts/plot_correlations.py -i $ICPROJ/inputs/df_micro_10L.tsv -o $ICPROJ/outputs/jobs21/micro_10Lr2_plots_\${v}_\${m}/ --unlabeled -s 0 -lb 0.2 -ub 0.99999999 -dl micro_100all --axis_off --no_fixaxis -m \$m && python $ICPATH/scripts/image_cluster.py -i $ICPROJ/outputs/jobs21/micro_10Lr2_plots_\${v}_\${m}/ -o $ICPROJ/outputs/jobs21/micro_10Lr2_results_\${v}_\${m}/ -l False -min 2 -max 20 -m \$m; done; done" > $ICPROJ/jobs/micro_10Lr2_all.txt
+
+python $gen_lsf_fp -c $ICPROJ/jobs/micro_10Lr2_all.txt -N micro_10Lr2_all -o $ICPROJ/jobs/ -n 1 -w 24:00 -s True -q gpu -M 24000
+
+###
+# LODI
+###
+
+for dir in /Users/KevinBu/Desktop/clemente_lab/Projects/iclust_paper/inputs/lodi_trajs/*;
+do
+for f in $dir/*.txt;
+do
+fn=${f##*/}
+python3 /Users/KevinBu/Desktop/clemente_lab/Repositories/iclust/scripts/plot_correlations.py -i ${f} -o $dir/ --labeled -l ID -s 0 -n 1 -sv 0 -dl lodi_noninterp_${fn%.txt} --lines --fixaxis --axis_off
+mkdir /Users/KevinBu/Desktop/clemente_lab/Projects/iclust_paper/outputs/jobs05/lodi_trajs/lodi_noninterp_${fn%.txt}_0_1x_0.0_iclust/
+python3 /Users/KevinBu/Desktop/clemente_lab/Repositories/iclust/scripts/image_cluster.py -i $dir/lodi_noninterp_${fn%.txt}_0_1x_0.0 -o /Users/KevinBu/Desktop/clemente_lab/Projects/iclust_paper/outputs/jobs05/lodi_trajs/lodi_noninterp_${fn%.txt}_0_1x_0.0_iclust/ -l True -m 20 --imageclustering
+done;
+done
+
+echo ${f##*/} # gets basename with extension
+echo ${f%/*} # gets path (dirname)
+
+
+~
